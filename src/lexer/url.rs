@@ -28,13 +28,19 @@ impl Display for LinkText {
 pub enum URLToken {
     // TODO: Capture link definitions
     
-    #[token("<html>", extract_link_info)]
-    //#[regex("<a[^<]+</a([ /n])*>", extract_link_info)]
+
+    #[regex("<a[^>]*href=[^>]+>[^<]*</a", extract_link_info)]
+
     Link((LinkUrl, LinkText)),
 
     // TODO: Ignore all characters that do not belong to a link definition
-    //#[regex(r"[ \t\n\f\r]+")]
-    #[regex("<[^>]*>", priority = 1)]
+    
+    #[regex("<[^>]+>", logos::skip)]
+    #[regex(r"[ \t\n\f\r]+",logos::skip)]
+    #[regex("[a-zA-Z]+", logos::skip)]
+    #[regex("[0-9]+", logos::skip)]
+    #[regex(">", logos::skip)]
+    #[regex("<a[^>]*>[^<]*</a",logos::skip)]
     Ignored,
 
     // Catch any error
@@ -52,8 +58,7 @@ fn extract_link_info(lex: &mut Lexer<URLToken>) -> (LinkUrl, LinkText) {
     let mut count = 0;
     let mut  url = String::new();
     let mut  text = String::new();
-    url = " ".to_string();
-    text = " ".to_string();
+    
 
     //create a vec bc i need the indexes
     while count < length {                      
@@ -63,7 +68,7 @@ fn extract_link_info(lex: &mut Lexer<URLToken>) -> (LinkUrl, LinkText) {
 
     count = 0;
     //find href="" within the string
-    while v[count] != Some('>') {   
+        while v[count] != Some('>') {   
         count = count + 1;        
         if v[count-1] == Some('h'){
             
@@ -98,9 +103,10 @@ fn extract_link_info(lex: &mut Lexer<URLToken>) -> (LinkUrl, LinkText) {
         
 
     }
-
+    
     count = count + 1;
 
+    
     while  v[count] != Some('<'){
 
         text.push(v[count].unwrap());
